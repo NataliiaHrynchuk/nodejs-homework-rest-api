@@ -8,13 +8,21 @@ function tryCatchWrapper(enpointFn) {
     };
 };
 
-function httpError(status, message) {
-    const err = new Error(message);
-    err.status = status;
-    return err;
-};
+// function HttpError(status, message) {
+//     const err = new Error(message);
+//     err.status = status;
+//     return err;
+// };
+
+class HttpError extends Error{
+    constructor(status, message) {
+        super(message);
+        this.name = "HttpError";
+        this.status = status;
+    }
+}
 
 module.exports = {
     tryCatchWrapper,
-    httpError,
+    HttpError,
 };
