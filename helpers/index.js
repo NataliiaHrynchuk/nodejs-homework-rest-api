@@ -8,21 +8,22 @@ function tryCatchWrapper(enpointFn) {
     };
 };
 
-// function HttpError(status, message) {
-//     const err = new Error(message);
-//     err.status = status;
-//     return err;
-// };
-
-class HttpError extends Error{
+class RequestError extends Error{
     constructor(status, message) {
         super(message);
         this.name = "HttpError";
         this.status = status;
     }
+};
+
+const isConflict = ({ name, code }) => (name === 'MongoServerError' && code === 11000);
+const handleSchemaValidationErrors = (error, data, next) => {
+    error.status = isConflict(error) ? 409 : 400;
+    next();
 }
 
 module.exports = {
     tryCatchWrapper,
-    HttpError,
+    RequestError,
+    handleSchemaValidationErrors
 };
