@@ -1,7 +1,7 @@
 const { Contact } = require('../models/contacts');
 const { RequestError } = require('../helpers/index');
 
-const listContacts = async (req, res, next) => {
+const getContacts = async (req, res, next) => {
     const contacts = await Contact.find();
     await res.json(contacts);
     next();
@@ -52,7 +52,7 @@ const removeContact = async (req, res, next) => {
 };
 
 module.exports = {
-    listContacts,
+    getContacts,
     getById,
     addContact,
     updateContact,

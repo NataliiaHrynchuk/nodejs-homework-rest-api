@@ -4,7 +4,7 @@ const { validateBody, isValidId } = require('../../middlewares/index');
 const { schemas } = require('../../models/contacts');
 
 const {
-  listContacts,
+  getContacts,
   getById,
   addContact,
   updateContact,
@@ -14,7 +14,7 @@ const {
 
 const router = express.Router();
 
-router.get('/', tryCatchWrapper(listContacts));
+router.get('/', tryCatchWrapper(getContacts));
 
 router.get('/:contactId',
   isValidId,
