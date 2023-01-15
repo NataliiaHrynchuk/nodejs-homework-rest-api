@@ -26,8 +26,9 @@ app.use((err, req, res, next) => {
     });
   }
   console.error("API Error:", err.message);
-  res.status(500).json({ message: "Internal server error", });
+  const { status = 500, message = "Server error" } = err;
+  return res.status(status).json({ message });
 });
 
 
-module.exports = app
+module.exports = app;
