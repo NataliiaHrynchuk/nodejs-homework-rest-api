@@ -7,20 +7,17 @@ dotenv.config();
 
 const { DB_HOST, PORT = 3000 } = process.env;
 
-async function main() { 
-  try {
-    await mongoose.connect(DB_HOST);
-    app.listen(PORT, () => {
+mongoose.connect(DB_HOST)
+  .then(() => app.listen(PORT, () => {
     console.log("Database connection successful")
-    });      
-  }
-    catch(error) {
-      console.error('Main failed', error.messaage);
-      process.exit(1);
-    };
-};
+  }))
+  .catch(error => {
+    console.error('Main failed', error.messaage);
+    process.exit(1);
+  });
 
-main();
+
+
 
 
 
