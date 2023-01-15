@@ -4,10 +4,9 @@ const { RequestError } = require('../helpers/index');
 const getContacts = async (req, res, next) => {
     const contacts = await Contact.find();
     await res.json(contacts);
-    next();
 };
 
-const getById = async (req, res, next) => {
+const getContact = async (req, res, next) => {
     const { contactId } = req.params;
     const contact = await Contact.findById(contactId);
 
@@ -53,7 +52,7 @@ const removeContact = async (req, res, next) => {
 
 module.exports = {
     getContacts,
-    getById,
+    getContact,
     addContact,
     updateContact,
     updateStatusContact,

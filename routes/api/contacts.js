@@ -5,7 +5,7 @@ const { schemas } = require('../../models/contacts');
 
 const {
   getContacts,
-  getById,
+  getContact,
   addContact,
   updateContact,
   updateStatusContact,
@@ -18,7 +18,7 @@ router.get('/', tryCatchWrapper(getContacts));
 
 router.get('/:contactId',
   isValidId,
-  tryCatchWrapper(getById));
+  tryCatchWrapper(getContact));
 
 router.post('/',
   validateBody(schemas.addContactsSchema),
