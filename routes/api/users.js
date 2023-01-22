@@ -7,9 +7,20 @@ const { schemas } = require('../../models/user');
 
 const router = express.Router();
 
-router.post('/register', validateBody(schemas.joiRegisterSchema), tryCatchWrapper(register));
-router.post('/login', validateBody(schemas.joiLoginSchema), tryCatchWrapper(login));
-router.get('/current', auth, tryCatchWrapper(getCurrent));
-router.post('/logout', auth, tryCatchWrapper(logout) )
+router.post('/register',
+    validateBody(schemas.registerUserSchema),
+    tryCatchWrapper(register));
+
+router.post('/login',
+    validateBody(schemas.loginUserSchema),
+    tryCatchWrapper(login));
+
+router.get('/current',
+    auth,
+    tryCatchWrapper(getCurrent));
+
+router.post('/logout',
+    auth,
+    tryCatchWrapper(logout))
 
 module.exports = router;

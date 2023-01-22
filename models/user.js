@@ -32,13 +32,13 @@ const userSchema = Schema({
 
 userSchema.post('save', handleSchemaValidationErrors);
 
-const joiRegisterSchema = Joi.object({
+const registerUserSchema = Joi.object({
     password: Joi.string().min(6).required(),
     email: Joi.string().pattern(emailRegexp).required(),
     subscription: Joi.string(),
 });
 
-const joiLoginSchema = Joi.object({
+const loginUserSchema = Joi.object({
     password: Joi.string().min(6).required(),
     email: Joi.string().pattern(emailRegexp).required(),
 });
@@ -46,8 +46,8 @@ const joiLoginSchema = Joi.object({
 const User = model('user', userSchema);
 
 const schemas = {
-    joiRegisterSchema,
-    joiLoginSchema,
+    registerUserSchema,
+    loginUserSchema,
 };
 
 module.exports = {
