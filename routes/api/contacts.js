@@ -1,6 +1,6 @@
 const express = require('express');
 const { tryCatchWrapper } = require('../../helpers/index.js');
-const { validateBody, isValidId } = require('../../middlewares/index');
+const { auth, validateBody, isValidId } = require('../../middlewares/index');
 const { schemas } = require('../../models/contacts');
 
 const {
@@ -14,13 +14,16 @@ const {
 
 const router = express.Router();
 
-router.get('/', tryCatchWrapper(getContacts));
+router.get('/',
+  auth,
+  tryCatchWrapper(getContacts));
 
 router.get('/:contactId',
   isValidId,
   tryCatchWrapper(getContact));
 
 router.post('/',
+  auth,
   validateBody(schemas.addContactsSchema),
   tryCatchWrapper(addContact));
 
