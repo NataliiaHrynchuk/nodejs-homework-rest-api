@@ -1,8 +1,11 @@
 const { Conflict, Unauthorized } = require('http-errors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models/user');
+const { User } = require('../models/users/user');
 const { SECRET_KEY } = process.env;
+const { avatarDir } = require('../path');
+const path = require('path');
+const fs = require('fs/promises');
 
 const register = async (req, res) => {
   const { email, password } = req.body;
@@ -48,12 +51,35 @@ const logout = async (req, res) => {
 };
 const updateSubscription = async (req, res, next) => {
   const { _id } = req.user;
-  // const { subscription } = req.body;
+
   const user = await User.findByIdAndUpdate(_id, req.body, { new: true });
   if (!user) {
     throw new Unauthorized('Email or password is wrong');
   }
   return res.status(200).json({ user });
+};
+
+const updateAvatar = async (req, res, next) => {
+  console.log('body', req.body);
+  console.log('file', req.file);
+  console.log('user', req.user);
+  const { _id } = req.user;
+
+  const user = await User.findById(_id);
+
+  if (!user) {
+    throw new Unauthorized('Email or password is wrong');
+  }
+  const { path: tempUpload, filename } = req.file;
+  const resultUpload = path.join(avatarDir, filename);
+  console.log('tempUpload', tempUpload);
+  console.log('resultUpload', resultUpload);
+  await fs.rename(tempUpload, resultUpload);
+
+  const avatarURL = path.join('public', 'avatars', filename);
+  await User.findByIdAndUpdate(_id, { avatarURL });
+
+  return res.status(200).json(avatarURL);
 };
 
 module.exports = {
@@ -62,4 +88,5 @@ module.exports = {
   getCurrent,
   logout,
   updateSubscription,
+  updateAvatar,
 };

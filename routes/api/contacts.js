@@ -5,7 +5,7 @@ const {
   addContactsSchema,
   updateContactsSchema,
   updateStatusSchema,
-} = require('../../models/contacts');
+} = require('../../models/contacts/joicontactsschemas');
 
 const {
   getContacts,

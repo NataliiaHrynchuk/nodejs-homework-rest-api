@@ -1,41 +1,5 @@
-const { Schema, model } = require('mongoose');
 const Joi = require('joi');
-const { handleSchemaValidationErrors } = require('../helpers/index');
-
-const phoneRegexp = /^\d{3}-\d{3}-\d{4}$/;
-
-const contactSchema = Schema(
-  {
-    name: {
-      type: String,
-      unique: true,
-      required: [true, 'Set name for contact'],
-    },
-    email: {
-      type: String,
-      unique: true,
-      required: [true, 'Set email for contact'],
-    },
-    phone: {
-      type: String,
-      match: phoneRegexp,
-      unique: true,
-      required: [true, 'Set phone for contact'],
-    },
-    favorite: {
-      type: Boolean,
-      default: false,
-    },
-    owner: {
-      type: Schema.Types.ObjectId,
-      ref: 'user',
-      required: true,
-    },
-  },
-  { versionKey: false }
-);
-
-contactSchema.post('save', handleSchemaValidationErrors);
+const phoneRegexp = require('./pattern');
 
 const addContactsSchema = Joi.object({
   name: Joi.string()
@@ -66,10 +30,7 @@ const updateStatusSchema = Joi.object({
   favorite: Joi.boolean().required().error(new Error('missing field favorite')),
 });
 
-const Contact = model('contact', contactSchema);
-
 module.exports = {
-  Contact,
   addContactsSchema,
   updateContactsSchema,
   updateStatusSchema,
