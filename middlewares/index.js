@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models/users/user');
 const { SECRET_KEY } = process.env;
 const multer = require('multer');
-const { tempDir } = require('../path');
+const path = require('path');
 
 const validateBody = (schema) => {
   return (req, res, next) => {
@@ -58,6 +58,7 @@ const auth = async (req, res, next) => {
   }
 };
 
+const tempDir = path.join(__dirname, '../', 'temp');
 const multerConfig = multer.diskStorage({
   destination: tempDir,
   filename: (req, file, cb) => {

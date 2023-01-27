@@ -38,10 +38,10 @@ router.patch(
   tryCatchWrapper(updateSubscription)
 );
 
-router.post(
-  '/upload',
+router.patch(
+  '/avatars',
   auth,
-  upload.single('image'),
+  upload.single('avatar'),
 
   tryCatchWrapper(updateAvatar)
 );

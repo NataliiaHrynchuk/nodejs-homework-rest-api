@@ -3,9 +3,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { User } = require('../models/users/user');
 const { SECRET_KEY } = process.env;
-const { avatarDir } = require('../path');
 const path = require('path');
 const fs = require('fs/promises');
+const gravatar = require('gravatar');
 
 const register = async (req, res) => {
   const { email, password } = req.body;
@@ -15,7 +15,12 @@ const register = async (req, res) => {
   }
 
   const hashPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
-  const result = await User.create({ email, password: hashPassword });
+  const avatarURL = gravatar.url(email);
+  const result = await User.create({
+    email,
+    password: hashPassword,
+    avatarURL,
+  });
   res.status(201).json(result);
 };
 
@@ -59,27 +64,29 @@ const updateSubscription = async (req, res, next) => {
   return res.status(200).json({ user });
 };
 
+const avatarDir = path.join(__dirname, '../', 'public', 'avatars');
+
 const updateAvatar = async (req, res, next) => {
-  console.log('body', req.body);
-  console.log('file', req.file);
-  console.log('user', req.user);
-  const { _id } = req.user;
-
-  const user = await User.findById(_id);
-
-  if (!user) {
-    throw new Unauthorized('Email or password is wrong');
+  try {
+    const { path: tempUpload, filename } = req.file;
+    const { _id } = req.user;
+    const [extention] = filename.split('.').reverse();
+    console.log(extention);
+    const avatarName = `${_id}.${extention}`;
+    const resultUpload = path.join(avatarDir, avatarName);
+    await fs.rename(tempUpload, resultUpload);
+    const avatarURL = path.join('avatars', resultUpload);
+    await User.findByIdAndUpdate(_id, { avatarURL });
+    return res.status(200).json({ avatarURL });
+  } catch (err) {
+    await fs.unlink(req.file.path);
+    throw err;
   }
-  const { path: tempUpload, filename } = req.file;
-  const resultUpload = path.join(avatarDir, filename);
-  console.log('tempUpload', tempUpload);
-  console.log('resultUpload', resultUpload);
-  await fs.rename(tempUpload, resultUpload);
-
-  const avatarURL = path.join('public', 'avatars', filename);
-  await User.findByIdAndUpdate(_id, { avatarURL });
-
-  return res.status(200).json(avatarURL);
+  // console.log('body', req.body);
+  // console.log('file', req.file);
+  // console.log('user', req.user);
+  // console.log('tempUpload', tempUpload);
+  // console.log('resultUpload', resultUpload);
 };
 
 module.exports = {
