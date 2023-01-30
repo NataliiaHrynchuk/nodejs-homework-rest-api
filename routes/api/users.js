@@ -1,6 +1,11 @@
 const express = require('express');
 const { tryCatchWrapper } = require('../../helpers/index.js');
-const { auth, validateBody, upload } = require('../../middlewares/index.js');
+const {
+  auth,
+  validateBody,
+  upload,
+  changeAvatarSize,
+} = require('../../middlewares/index.js');
 
 const {
   register,
@@ -42,7 +47,7 @@ router.patch(
   '/avatars',
   auth,
   upload.single('avatar'),
-
+  changeAvatarSize,
   tryCatchWrapper(updateAvatar)
 );
 module.exports = router;

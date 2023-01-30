@@ -67,11 +67,11 @@ const updateSubscription = async (req, res, next) => {
 const avatarDir = path.join(__dirname, '../', 'public', 'avatars');
 
 const updateAvatar = async (req, res, next) => {
+  console.log('req.file:', req.file);
   try {
     const { path: tempUpload, filename } = req.file;
     const { _id } = req.user;
     const [extention] = filename.split('.').reverse();
-    console.log(extention);
     const avatarName = `${_id}.${extention}`;
     const resultUpload = path.join(avatarDir, avatarName);
     await fs.rename(tempUpload, resultUpload);
@@ -82,11 +82,6 @@ const updateAvatar = async (req, res, next) => {
     await fs.unlink(req.file.path);
     throw err;
   }
-  // console.log('body', req.body);
-  // console.log('file', req.file);
-  // console.log('user', req.user);
-  // console.log('tempUpload', tempUpload);
-  // console.log('resultUpload', resultUpload);
 };
 
 module.exports = {

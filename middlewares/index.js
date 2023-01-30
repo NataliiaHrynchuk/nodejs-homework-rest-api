@@ -6,6 +6,7 @@ const { User } = require('../models/users/user');
 const { SECRET_KEY } = process.env;
 const multer = require('multer');
 const path = require('path');
+const Jimp = require('jimp');
 
 const validateBody = (schema) => {
   return (req, res, next) => {
@@ -70,9 +71,22 @@ const upload = multer({
   storage: multerConfig,
 });
 
+const changeAvatarSize = async (req, res, next) => {
+  const { path } = req.file;
+  try {
+    await Jimp.read(path).then((img) => {
+      return img.resize(250, 250).writeAsync(path);
+    });
+  } catch (error) {
+    next(error);
+  }
+  next();
+};
+
 module.exports = {
   validateBody,
   isValidId,
   auth,
   upload,
+  changeAvatarSize,
 };
