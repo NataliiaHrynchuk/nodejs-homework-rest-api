@@ -1,4 +1,4 @@
-const { Contact } = require('../models/contacts');
+const Contact = require('../models/contacts/contacts');
 const { RequestError } = require('../helpers/index');
 
 const getContacts = async (req, res, next) => {
@@ -10,13 +10,13 @@ const getContacts = async (req, res, next) => {
       skip,
       limit: Number(limit),
     }).populate('owner', '_id email');
-    await res.json(contacts);
+    return res.json(contacts);
   }
   const contacts = await Contact.find({ owner: _id, favorite }, '', {
     skip,
     limit: Number(limit),
   }).populate('owner', '_id email');
-  await res.json(contacts);
+  return res.json(contacts);
 };
 
 const getContact = async (req, res, next) => {

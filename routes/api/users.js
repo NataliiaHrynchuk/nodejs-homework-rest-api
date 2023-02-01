@@ -1,6 +1,11 @@
 const express = require('express');
 const { tryCatchWrapper } = require('../../helpers/index.js');
-const { auth, validateBody } = require('../../middlewares/index');
+const {
+  auth,
+  validateBody,
+  upload,
+  changeAvatarSize,
+} = require('../../middlewares/index.js');
 
 const {
   register,
@@ -8,32 +13,41 @@ const {
   getCurrent,
   logout,
   updateSubscription,
+  updateAvatar,
 } = require('../../controllers/users.controller');
-const { schemas } = require('../../models/user');
+
+const {
+  registerUserSchema,
+  loginUserSchema,
+  updateSubscriptionUserSchema,
+} = require('../../models/users/joiusersschemas');
 
 const router = express.Router();
 
 router.post(
   '/register',
-  validateBody(schemas.registerUserSchema),
+  validateBody(registerUserSchema),
   tryCatchWrapper(register)
 );
 
-router.post(
-  '/login',
-  validateBody(schemas.loginUserSchema),
-  tryCatchWrapper(login)
-);
+router.post('/login', validateBody(loginUserSchema), tryCatchWrapper(login));
 
 router.get('/current', auth, tryCatchWrapper(getCurrent));
 
 router.post('/logout', auth, tryCatchWrapper(logout));
 
 router.patch(
-  '/',
+  '/updateSubscription',
   auth,
-  validateBody(schemas.updateSubscriptionSchema),
+  validateBody(updateSubscriptionUserSchema),
   tryCatchWrapper(updateSubscription)
 );
 
+router.patch(
+  '/avatars',
+  auth,
+  upload.single('avatar'),
+  changeAvatarSize,
+  tryCatchWrapper(updateAvatar)
+);
 module.exports = router;

@@ -1,8 +1,11 @@
 const { Conflict, Unauthorized } = require('http-errors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models/user');
+const { User } = require('../models/users/user');
 const { SECRET_KEY } = process.env;
+const path = require('path');
+const fs = require('fs/promises');
+const gravatar = require('gravatar');
 
 const register = async (req, res) => {
   const { email, password } = req.body;
@@ -12,7 +15,12 @@ const register = async (req, res) => {
   }
 
   const hashPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
-  const result = await User.create({ email, password: hashPassword });
+  const avatarURL = gravatar.url(email);
+  const result = await User.create({
+    email,
+    password: hashPassword,
+    avatarURL,
+  });
   res.status(201).json(result);
 };
 
@@ -31,10 +39,19 @@ const login = async (req, res, next) => {
   const payload = {
     id: user._id,
   };
-
+  const { subscription } = user;
   const token = jwt.sign(payload, `${SECRET_KEY}`, { expiresIn: '1h' });
   await User.findByIdAndUpdate(user._id, { token });
-  res.status(200).json(token);
+
+  res.status(200).json({
+    data: {
+      user: {
+        email,
+        subscription,
+      },
+      token,
+    },
+  });
 };
 
 const getCurrent = async (req, res) => {
@@ -48,12 +65,32 @@ const logout = async (req, res) => {
 };
 const updateSubscription = async (req, res, next) => {
   const { _id } = req.user;
-  // const { subscription } = req.body;
+
   const user = await User.findByIdAndUpdate(_id, req.body, { new: true });
   if (!user) {
     throw new Unauthorized('Email or password is wrong');
   }
   return res.status(200).json({ user });
+};
+
+const avatarDir = path.join(__dirname, '../', 'public', 'avatars');
+
+const updateAvatar = async (req, res, next) => {
+  console.log('req.file:', req.file);
+  try {
+    const { path: tempUpload, filename } = req.file;
+    const { _id } = req.user;
+    const [extention] = filename.split('.').reverse();
+    const avatarName = `${_id}.${extention}`;
+    const resultUpload = path.join(avatarDir, avatarName);
+    await fs.rename(tempUpload, resultUpload);
+    const avatarURL = path.join('avatars', resultUpload);
+    await User.findByIdAndUpdate(_id, { avatarURL });
+    return res.status(200).json({ avatarURL });
+  } catch (err) {
+    await fs.unlink(req.file.path);
+    throw err;
+  }
 };
 
 module.exports = {
@@ -62,4 +99,5 @@ module.exports = {
   getCurrent,
   logout,
   updateSubscription,
+  updateAvatar,
 };
