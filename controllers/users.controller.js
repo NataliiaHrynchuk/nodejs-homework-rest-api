@@ -1,4 +1,4 @@
-const { Conflict, NotFound, Unauthorized } = require('http-errors');
+const { BadRequest, Conflict, NotFound, Unauthorized } = require('http-errors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { User } = require('../models/users/user');
@@ -19,18 +19,18 @@ const register = async (req, res) => {
 
   const hashPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
   const avatarURL = gravatar.url(email);
-  const verficationToken = nanoid();
+  const verificationToken = nanoid();
   await User.create({
     email,
     password: hashPassword,
     avatarURL,
-    verficationToken,
+    verificationToken,
   });
 
   const mail = {
     to: email,
     subject: 'Підтвердження email',
-    html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verficationToken}">Підтвердити email </a>`,
+    html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verificationToken}">Підтвердити email </a>`,
   };
 
   await sendEmail(mail);
@@ -41,23 +41,42 @@ const register = async (req, res) => {
         email,
         password,
         avatarURL,
-        verficationToken,
+        verificationToken,
       },
     },
   });
 };
 
 const verifyEmail = async (req, res) => {
-  const { verficationToken } = req.params;
-  const user = await User.findOne({ verficationToken });
+  const { verificationToken } = req.params;
+  const user = await User.findOne({ verificationToken });
   if (!user) {
-    throw NotFound();
+    throw NotFound('User not found');
   }
   await User.findByIdAndUpdate(user._id, {
     verify: true,
-    verficationToken: null,
+    verificationToken: null,
   });
   res.json({ message: 'Verification successful' });
+};
+
+const resendEmail = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw NotFound('missing required field email');
+  }
+  if (user.verify) {
+    throw BadRequest('Verification has already been passed');
+  }
+
+  const mail = {
+    to: email,
+    subject: 'Підтвердження email',
+    html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${user.verificationToken}">Підтвердити email </a>`,
+  };
+  await sendEmail(mail);
+  res.status(200).json('Verification email sent');
 };
 
 const login = async (req, res, next) => {
@@ -132,6 +151,7 @@ const updateAvatar = async (req, res, next) => {
 module.exports = {
   register,
   verifyEmail,
+  resendEmail,
   login,
   getCurrent,
   logout,
