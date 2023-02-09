@@ -1,4 +1,4 @@
-const { Conflict, Unauthorized } = require('http-errors');
+const { BadRequest, Conflict, NotFound, Unauthorized } = require('http-errors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { User } = require('../models/users/user');
@@ -6,9 +6,12 @@ const { SECRET_KEY } = process.env;
 const path = require('path');
 const fs = require('fs/promises');
 const gravatar = require('gravatar');
+const { nanoid } = require('nanoid');
+const { sendEmail } = require('../helpers/index');
 
 const register = async (req, res) => {
   const { email, password } = req.body;
+
   const user = await User.findOne({ email });
   if (user) {
     throw new Conflict('Email in use');
@@ -16,24 +19,76 @@ const register = async (req, res) => {
 
   const hashPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
   const avatarURL = gravatar.url(email);
-  const result = await User.create({
+  const verificationToken = nanoid();
+  await User.create({
     email,
     password: hashPassword,
     avatarURL,
+    verificationToken,
   });
-  res.status(201).json(result);
+
+  const mail = {
+    to: email,
+    subject: 'Підтвердження email',
+    html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verificationToken}">Підтвердити email </a>`,
+  };
+
+  await sendEmail(mail);
+
+  res.status(201).json({
+    data: {
+      user: {
+        email,
+        password,
+        avatarURL,
+        verificationToken,
+      },
+    },
+  });
+};
+
+const verifyEmail = async (req, res) => {
+  const { verificationToken } = req.params;
+  const user = await User.findOne({ verificationToken });
+  if (!user) {
+    throw NotFound('User not found');
+  }
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: null,
+  });
+  res.json({ message: 'Verification successful' });
+};
+
+const resendEmail = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw NotFound('missing required field email');
+  }
+  if (user.verify) {
+    throw BadRequest('Verification has already been passed');
+  }
+
+  const mail = {
+    to: email,
+    subject: 'Підтвердження email',
+    html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${user.verificationToken}">Підтвердити email </a>`,
+  };
+  await sendEmail(mail);
+  res.status(200).json('Verification email sent');
 };
 
 const login = async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  if (!user) {
-    throw new Unauthorized('Email or password is wrong');
+  if (!user || !user.verify) {
+    throw new Unauthorized('Email is wrong or not verify');
   }
   const passCompare = bcrypt.compareSync(password, user.password);
 
   if (!passCompare) {
-    throw new Unauthorized('Email or password is wrong');
+    throw new Unauthorized('Password is wrong');
   }
 
   const payload = {
@@ -95,6 +150,8 @@ const updateAvatar = async (req, res, next) => {
 
 module.exports = {
   register,
+  verifyEmail,
+  resendEmail,
   login,
   getCurrent,
   logout,

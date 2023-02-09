@@ -9,6 +9,8 @@ const {
 
 const {
   register,
+  verifyEmail,
+  resendEmail,
   login,
   getCurrent,
   logout,
@@ -33,6 +35,10 @@ router.post(
 router.post('/login', validateBody(loginUserSchema), tryCatchWrapper(login));
 
 router.get('/current', auth, tryCatchWrapper(getCurrent));
+
+router.post('/verify', tryCatchWrapper(resendEmail));
+
+router.get('/verify/:verificationToken', tryCatchWrapper(verifyEmail));
 
 router.post('/logout', auth, tryCatchWrapper(logout));
 

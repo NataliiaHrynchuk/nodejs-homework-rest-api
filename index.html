@@ -16,7 +16,6 @@
         form.addEventListener("submit", function(e){
             e.preventDefault();
             const {image} = this.elements;
-            // console.log(image.files[0]);
             const data = new FormData();
             data.append("image", image.files)
         })
